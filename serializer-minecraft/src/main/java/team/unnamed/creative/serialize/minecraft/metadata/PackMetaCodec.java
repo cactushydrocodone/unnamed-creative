@@ -24,6 +24,7 @@
 package team.unnamed.creative.serialize.minecraft.metadata;
 
 import com.google.gson.JsonElement;
+import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.internal.Streams;
 import com.google.gson.stream.JsonWriter;
@@ -38,6 +39,9 @@ import org.jetbrains.annotations.NotNull;
 import team.unnamed.creative.metadata.pack.PackFormat;
 import team.unnamed.creative.metadata.pack.PackMeta;
 import team.unnamed.creative.serialize.minecraft.base.PackFormatSerializer;
+
+import java.util.List;
+import java.util.ArrayList;
 
 import java.io.IOException;
 
@@ -60,13 +64,29 @@ final class PackMetaCodec implements MetadataPartCodec<PackMeta> {
 
     @Override
     public @NotNull PackMeta read(final @NotNull JsonObject node) {
-        final int singleFormat = node.get("pack_format").getAsInt();
         final PackFormat format;
-        if (node.has("supported_formats")) { // since Minecraft 1.20.2 (pack format 18)
-            JsonElement el = node.get("supported_formats");
-            format = PackFormatSerializer.deserialize(el, singleFormat);
+        if (node.has("min_format") && node.has("max_format")) {
+            final int pack_format = node.get("min_format").getAsInt();
+            final int min_format = pack_format;
+            final int max_format = node.get("max_format").getAsInt();
+
+            final List<Integer> PackFormatList = List.of(min_format, max_format);
+            final String PackFormatListJsonArrayString = new Gson().toJson(PackFormatList);
+            // final List PackFormatListJsonArray = new Gson().fromJson(PackFormatListJsonArrayString, ArrayList.class);
+
+            JsonObject PackFormatObject = new JsonObject();
+            PackFormatObject.addProperty("supported_formats", PackFormatListJsonArrayString);
+
+            JsonElement el = PackFormatObject.get("supported_formats");
+            format = PackFormatSerializer.deserialize(el, pack_format);
         } else {
-            format = PackFormat.format(singleFormat);
+            final int singleFormat = node.get("pack_format").getAsInt();
+            if (node.has("supported_formats")) { // since Minecraft 1.20.2 (pack format 18)
+                JsonElement el = node.get("supported_formats");
+                format = PackFormatSerializer.deserialize(el, singleFormat);
+            } else {
+                format = PackFormat.format(singleFormat);
+            }
         }
 
         final JsonElement descriptionNode = node.get("description");
