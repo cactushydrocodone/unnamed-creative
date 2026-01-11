@@ -66,9 +66,19 @@ final class PackMetaCodec implements MetadataPartCodec<PackMeta> {
     public @NotNull PackMeta read(final @NotNull JsonObject node) {
         final PackFormat format;
         if (node.has("min_format") && node.has("max_format")) {
-            final int pack_format = node.get("min_format").getAsInt();
-            final int min_format = pack_format;
-            final int max_format = node.get("max_format").getAsInt();
+            // ignore minor version.
+            JsonElement _min_format = node.get("min_format");
+            JsonElement _max_format = node.get("max_format");
+            final int min_format;
+            final int max_format;
+            if (_min_format.isJsonArray() && _max_format.isJsonArray()) {
+                min_format = _min_format.getAsJsonArray().get(0).getAsInt();
+                max_format = _max_format.getAsJsonArray().get(0).getAsInt();
+            } else {
+                min_format = _min_format.getAsInt();
+                max_format = _max_format.getAsInt();
+            }
+            final int pack_format = min_format;
 
             final List<Integer> PackFormatList = List.of(min_format, max_format);
             final String PackFormatListJsonArrayString = new Gson().toJson(PackFormatList);
@@ -147,3 +157,4 @@ final class PackMetaCodec implements MetadataPartCodec<PackMeta> {
     }
 
 }
+
