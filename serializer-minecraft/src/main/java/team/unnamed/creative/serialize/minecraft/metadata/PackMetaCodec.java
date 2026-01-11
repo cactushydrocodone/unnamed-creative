@@ -24,6 +24,7 @@
 package team.unnamed.creative.serialize.minecraft.metadata;
 
 import com.google.gson.JsonElement;
+import com.google.gson.JsonArray;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.internal.Streams;
@@ -82,10 +83,10 @@ final class PackMetaCodec implements MetadataPartCodec<PackMeta> {
 
             final List<Integer> PackFormatList = List.of(min_format, max_format);
             final String PackFormatListJsonArrayString = new Gson().toJson(PackFormatList);
-            // final List PackFormatListJsonArray = new Gson().fromJson(PackFormatListJsonArrayString, ArrayList.class);
+            final JsonArray PackFormatListJsonArray = new Gson().fromJson(PackFormatListJsonArrayString, JsonArray.class);
 
             JsonObject PackFormatObject = new JsonObject();
-            PackFormatObject.addProperty("supported_formats", PackFormatListJsonArrayString);
+            PackFormatObject.add("supported_formats", PackFormatListJsonArray);
 
             JsonElement el = PackFormatObject.get("supported_formats");
             format = PackFormatSerializer.deserialize(el, pack_format);
